@@ -2,6 +2,8 @@
 
 class Room
   attr_reader :sector, :encrypted_name, :checksum, :counts
+  LETTERS = ('a'..'z').to_a
+
   def initialize(room_string)
     (@encrypted_name, @sector, @checksum) = room_string.scan(/(.*)-(\d+)\[(.*)\]/).to_a.first
     @sector = @sector.to_i
@@ -21,21 +23,37 @@ class Room
   end
 
   def valid?
+    puts "#{calculate_validity}"
     checksum == calculate_validity
+  end
+
+  def decrypt
+    encrypted_name.chars.map do |char|
+      char == '-' ? ' ' : LETTERS[convert(char)]
+    end
+  end
+
+  private
+
+  def convert(character)
+    (LETTERS.index(character) + sector) % LETTERS.length
   end
 end
 
-rooms = <<END_OF_ROOMS
-aaaaa-bbb-z-y-x-123[abxyz]
-a-b-c-d-e-f-g-h-987[abcde]
-not-a-real-room-404[oarel]
-totally-real-room-200[decoy]
-END_OF_ROOMS
+# aaaaa-bbb-z-y-x-123[abxyz]
+# a-b-c-d-e-f-g-h-987[abcde]
+# not-a-real-room-404[oarel]
+# totally-real-room-200[decoy]
+# rooms = <<END_OF_ROOMS
+# qzmt-zixmtkozy-ivhz-343[zimth]
+# END_OF_ROOMS
 
-# rooms = File.read('day4.input')
+rooms = File.read('day4.input')
 
 my_rooms = rooms.split("\n").map do |room|
   Room.new(room)
 end
 
-puts my_rooms.select(&:valid?).map(&:sector).reduce(:+)
+my_rooms.select(&:valid?).each do |valid_room|
+  puts "#{valid_room.sector}: #{valid_room.decrypt.join('')}"
+end
